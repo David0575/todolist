@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>todolist</title>
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <section class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group mb-3">
+                    <input type="text" id="todoCreate" class="form-control" placeholder="新增待辦事項" aria-label="新增待辦事項" aria-describedby="button-addon2">
+                    <button type="button" id="todoCreateBtn" class="btn btn-outline-secondary">新增</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <ul class="list-group" id="task-list">
+                    
+                    <!-- 待辦事項顯示在此 -->
+                </ul>
+            </div>
+        </div>
+    </section>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="all.js"></script>
+</body>
+</html>

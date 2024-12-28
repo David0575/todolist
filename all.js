@@ -2,37 +2,44 @@
 let taskListArray = JSON.parse(localStorage.getItem('taskListArray')) || [];
 
 // 定義任務列表的 DOM 元素
+const mainArea = document.querySelector('#mainArea');
+const taskArea = document.querySelector('.mainListItemBorder');
 const allItem = document.getElementById('task-list');
 const agentItem = document.getElementById('task-list-agent');
 const finishItem = document.getElementById('task-list-finish');
 
-// 建立目前尚無代辦事項的 li 元素
-const noTaskLi = document.createElement('li');
-noTaskLi.className = 'list-group-item d-flex justify-content-between align-items-center';
-noTaskLi.innerText = '目前尚無代辦事項';
-allItem.appendChild(noTaskLi); // 預設顯示該li
+// 建立目前尚無代辦事項的 div 元素
+const noTask = document.createElement('div');
+noTask.className = 'noTask';
+noTask.innerHTML = '<p>目前尚無代辦事項</p><img src="images/noTask.svg">';
+mainArea.removeChild(taskArea); // 預設隱藏任務狀態
+mainArea.appendChild(noTask); // 預設顯示無任務畫面
 
 // 如果任務列表是空的就顯示無代辦，會從其他動作中調用
 function updateNoTaskClass() {
     if (taskListArray.length === 0) {
-        if (!document.contains(noTaskLi)) {
-            allItem.appendChild(noTaskLi);
+        if (!document.contains(noTask)) {
+            mainArea.appendChild(noTask);
+            mainArea.removeChild(taskArea);
         }
     } else {
-        if (document.contains(noTaskLi)) {
-            noTaskLi.remove();
+        if (document.contains(noTask)) {
+            mainArea.removeChild(noTask);
+            mainArea.appendChild(taskArea);
         }
     }
 }
-  // 將 taskListArray 保存到 localStorage，會從其他動作中調用
-  function saveToLocalStorage() {
-      localStorage.setItem('taskListArray', JSON.stringify(taskListArray));
-      console.table(taskListArray.map(task => ({
-          text: task.text,
-          completed: task.completed,
-          index: taskListArray.indexOf(task)
-      })));
-  };
+
+// 將 taskListArray 保存到 localStorage，會從其他動作中調用
+function saveToLocalStorage() {
+    localStorage.setItem('taskListArray', JSON.stringify(taskListArray));
+    console.table(taskListArray.map(task => ({
+        text: task.text,
+        completed: task.completed,
+        index: taskListArray.indexOf(task),
+        id: task.id
+    })));
+}
 
 // 設定任務清單的li顯示，會從其他動作中調用
 function createListItem() {
@@ -52,59 +59,61 @@ function createStatusSpan(status) {
 }
 
 // 建立刪除按鈕，會從其他動作中調用
-function createDelBtn(listItem, taskText) {
+function createDelBtn(listItem, taskId) {
     const delBtn = document.createElement('button');
-    delBtn.className = 'btn btn-danger btn-sm mx-2';
-    delBtn.innerText = '刪除';
+    delBtn.className = 'btn btn-sm mx-2 delBtn';
+    delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     delBtn.addEventListener('click', function () {
-        const index = taskListArray.findIndex(item => item.text === taskText);
+        const index = taskListArray.findIndex(item => item.id === taskId);
         if (index > -1) {
             taskListArray.splice(index, 1);
             saveToLocalStorage();
             loadAllTasks();
+            showAgentTasks(); // 更新待完成數量
         }
     });
     return delBtn;
 }
 
 // 建立核取方塊，會從其他動作中調用
-function createCheckBox(listItem, statusSpan, taskText) {
+function createCheckBox(listItem, statusSpan, taskId) {
     const checkBox = document.createElement('input');
     checkBox.className = 'form-check-input';
     checkBox.setAttribute("type", "checkbox");
-    const index = taskListArray.findIndex(item => item.text === taskText);
+    const index = taskListArray.findIndex(item => item.id === taskId);
     if (index > -1) {
         checkBox.checked = taskListArray[index].completed;
     }
-    
+
     checkBox.addEventListener('change', function () {
-        const index = taskListArray.findIndex(item => item.text === taskText);
+        const index = taskListArray.findIndex(item => item.id === taskId);
         if (index > -1) {
             taskListArray[index].completed = checkBox.checked;
             statusSpan.innerText = checkBox.checked ? '已完成' : '待完成';
             statusSpan.className = checkBox.checked ? 'badge bg-success mx-2' : 'badge bg-warning text-dark mx-2';
             saveToLocalStorage();
             loadAllTasks();
+            showAgentTasks();
         }
     });
     return checkBox;
 }
 
 // 建立修改按鈕，會從其他動作中調用
-function createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, taskText) {
+function createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, taskId) {
     const updateBtn = document.createElement('button');
-    updateBtn.className = 'btn btn-info btn-sm mx-2';
-    updateBtn.innerText = '修改';
-    
+    updateBtn.className = 'btn btn-sm mx-2 updateBtn';
+    updateBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+
     updateBtn.addEventListener('click', function () {
         const todoUpdate = document.createElement('input');
         todoUpdate.className = 'form-control';
         todoUpdate.value = listItemText.innerText;
 
         const updateCheck = document.createElement('button');
-        updateCheck.className = 'btn btn-info btn-sm mx-2';
-        updateCheck.innerText = '確定修改';
-        
+        updateCheck.className = 'btn btn-sm mx-2';
+        updateCheck.innerHTML = '<i class="fa-solid fa-check"></i>';
+
         listItem.innerHTML = '';
         listItem.appendChild(todoUpdate);
         listItem.appendChild(updateCheck);
@@ -112,20 +121,28 @@ function createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, t
         updateCheck.addEventListener('click', function () {
             const newText = todoUpdate.value;
             if (newText) {
-                const index = taskListArray.findIndex(item => item.text === taskText);
+                const index = taskListArray.findIndex(item => item.id === taskId);
                 if (index > -1) {
                     taskListArray[index].text = newText;
                     saveToLocalStorage();
                     loadAllTasks();
                     console.log('修改任務:', {
                         text: taskListArray[index].text,
-                        index: index
+                        id: taskListArray[index].id
                     });
                 }
             }
         });
     });
     return updateBtn;
+}
+
+// 顯示待完成事項
+function showAgentTasks() {
+    const agentTasks = taskListArray.filter(task => !task.completed);
+    const agentTasksSpan = document.querySelector('#taskCount');
+    agentTasksSpan.innerText = String(agentTasks.length);
+    return agentTasksSpan;
 }
 
 // 將任務項目添加到DOM，會從其他動作中調用
@@ -142,15 +159,15 @@ function addTaskToDOM(parentElement, listItem, checkBox, statusSpan, listItemTex
 function loadTasks(filterFn, parentElement) {
     parentElement.innerHTML = '';
     const tasks = filterFn ? taskListArray.filter(filterFn) : taskListArray;
-    
+
     tasks.forEach(task => {
         const { listItem, listItemText } = createListItem();
         listItemText.innerText = task.text;
 
         const statusSpan = createStatusSpan(task.completed);
-        const checkBox = createCheckBox(listItem, statusSpan, task.text);
-        const delBtn = createDelBtn(listItem, task.text);
-        const updateBtn = createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, task.text);
+        const checkBox = createCheckBox(listItem, statusSpan, task.id);
+        const delBtn = createDelBtn(listItem, task.id);
+        const updateBtn = createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, task.id);
 
         addTaskToDOM(parentElement, listItem, checkBox, statusSpan, listItemText, delBtn, updateBtn);
     });
@@ -169,20 +186,16 @@ document.getElementById('todoCreateBtn').addEventListener('click', function () {
     const taskInput = document.getElementById('todoCreate');
     const taskText = taskInput.value;
     if (taskText) { // 如果輸入框有寫東西
-        const { listItem, listItemText } = createListItem(); // 設定任務清單的li
-        listItemText.innerText = taskText; // 從輸入框獲得資料寫入
-
-        const statusSpan = createStatusSpan(false); // 設定狀態標籤
-        const checkBox = createCheckBox(listItem, statusSpan); // 設定勾選鈕
-        const delBtn = createDelBtn(listItem); // 設定刪除鈕
-        const updateBtn = createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn); // 設定更新鈕
-
-        addTaskToDOM(allItem, listItem, checkBox, statusSpan, listItemText, delBtn, updateBtn); // 將該更新到頁面的item、文字、按鈕都更新上去
-
-        taskListArray.push({ text: taskText, completed: false, element: listItem, textElement: listItemText }); // 將資料存到陣列
+        const newTask = {
+            text: taskText,
+            completed: false,
+            id: Date.now() // 使用時間戳作為唯一識別
+        };
+        taskListArray.push(newTask);
+        saveToLocalStorage();
         taskInput.value = ''; // 將輸入框清空
-        updateNoTaskClass();
-        saveToLocalStorage(); // 更新 localStorage
+        loadAllTasks(); // 重新加載任務列表以綁定事件處理程序
+        showAgentTasks(); // 更新待完成數量
     }
 });
 
@@ -205,20 +218,6 @@ document.querySelectorAll('.nav-link').forEach(tab => {
     });
 });
 
-// 移動任務項目到對應的頁籤
-function moveTaskItem(task) {
-    if (task.completed) {
-        if (agentItem.contains(task.element)) {
-            agentItem.removeChild(task.element); // 從待完成頁籤中移除
-        }
-        finishItem.appendChild(task.element); // 添加到已完成頁籤中
-    } else {
-        if (finishItem.contains(task.element)) {
-            finishItem.removeChild(task.element); // 從已完成頁籤中移除
-        }
-        agentItem.appendChild(task.element); // 添加到待完成頁籤中
-    }
-}
-
-// 初次加載任務列表
+// 當頁面加載時加載所有任務
 loadAllTasks();
+showAgentTasks(); // 更新待完成數量

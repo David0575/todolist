@@ -137,11 +137,18 @@ function createUpdateBtn(listItem, checkBox, statusSpan, listItemText, delBtn, t
     return updateBtn;
 }
 
-// 顯示待完成事項
+// 顯示待完成事項及刪除完成事項按鈕
 function showAgentTasks() {
     const agentTasks = taskListArray.filter(task => !task.completed);
     const agentTasksSpan = document.querySelector('#taskCount');
-    agentTasksSpan.innerText = String(agentTasks.length);
+    agentTasksSpan.innerText = agentTasks.length;
+
+    const deleteFinishBtn = document.querySelector('#clearAllBtn');
+    deleteFinishBtn.addEventListener('click', function () {
+        taskListArray = taskListArray.filter(task => !task.completed);
+        saveToLocalStorage();
+        loadAllTasks();
+    });
     return agentTasksSpan;
 }
 

@@ -97,3 +97,27 @@ header nav.navbar-light {
     word-break:break-all;
     max-width: 100%;
 }
+#myTabContent .tab-pane ul.list-group li.list-group-item button {
+    color: #9F9A91;
+}
+#myTabContent .tab-pane ul.list-group li.list-group-item button:hover {
+    color: #333;
+}
+
+#taskCountArea {
+    padding: 0px 24px 16px;
+}
+#taskCountArea #taskCount {
+    color: #333333;
+}
+#taskCountArea #clearAllBtn {
+    padding: 0px;
+    border: none;
+    color: #9F9A91;
+    background: none;
+}
+#taskCountArea #clearAllBtn:hover {
+    color: #333;
+    text-decoration: underline;
+    background: none;
+}
